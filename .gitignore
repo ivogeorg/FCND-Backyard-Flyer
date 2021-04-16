@@ -13,3 +13,7 @@ Logs
 # python 
 __pycache__/
 *.pyc
+
+# vscode
+.vscode/
+
