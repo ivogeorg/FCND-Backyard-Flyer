@@ -15,9 +15,19 @@ Udacity FCND Project 1
    3. Some of the messages are drone state and some are commands.   
    4. See [message_types](https://github.com/udacity/udacidrone/blob/master/udacidrone/connection/message_types.py) (used by `MavlinkConnection`).  
 4. Load up on [MAVLink](https://mavlink.io/en/), including the [pymavlink](https://mavlink.io/en/mavgen_python/) ([library](https://pypi.org/project/pymavlink/)).  
-   1. The abstract class [`Connection`](https://github.com/udacity/udacidrone/blob/master/udacidrone/connection/connection.py) has a protocol-specific subclasses.  
+   1. The abstract class [`Connection`](https://github.com/udacity/udacidrone/blob/master/udacidrone/connection/connection.py) has protocol-specific subclasses.  
    2. The [`MavlinkConnection`](https://github.com/udacity/udacidrone/blob/master/udacidrone/connection/mavlink_connection.py) is the MAVLink-specific subclass.  
    3. The [mavlink_utils](https://github.com/udacity/udacidrone/blob/master/udacidrone/connection/mavlink_utils.py) are interesting.  
-5. State diagram, including:  
+5. Coordinate systems:
+   1. Figuring out _global_ vs _local_ coordinates.  
+   2. Figuring out coordinate systems, especially vertical coordinate `z`, and two-way transformations.  
+6. State diagram, including:  
    1. Automatic state changes (sequential).  
    2. Callback state changes due to received messages.    
+7. Extras:  
+   1. Two modes of flying in a square:  
+      1. F-L-B-R.  
+      2. F-LT-F-LT-F-LT-F-LT.  
+   2. Randomize square side.  
+   3. Randomize CW-CCW.  
+   4. Randomize elevation (more difficult).
