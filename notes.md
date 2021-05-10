@@ -11,7 +11,7 @@ Udacity FCND Project 1
          2. The second clue is that the `Drone` class is said to be a _pass-through_ (to the "drone", which can be either a real physical drone with its own autopilot, e.g. PX4, or the simulated drone).  
    2. [Connection](https://udacity.github.io/udacidrone/docs/connection-api.html).  
    3. Plotting data with [visdom](https://github.com/fossasia/visdom) (for later).  
-2. Peruse the [project](https://github.com/ivogeorg/FCND-Backyard-Flyer/blob/main/README.md) and [official solution](https://github.com/udacity/FCND-Backyard-Flyer/blob/solution/README.md) READMEs.  
+2. ~Peruse the [project](https://github.com/ivogeorg/FCND-Backyard-Flyer/blob/main/README.md) and [official solution](https://github.com/udacity/FCND-Backyard-Flyer/blob/solution/README.md) READMEs.~  
 3. Drone messages:  
    1. [`MsgID`](https://github.com/udacity/udacidrone/blob/master/udacidrone/messaging/message_ids.py) is an `enum` type in `udacidrone`. 
    2. The [`Drone`](https://github.com/udacity/udacidrone/blob/master/udacidrone/drone.py) class listens to all the messages on its `connection`.  
@@ -50,7 +50,7 @@ Udacity FCND Project 1
    6. Of these, all but `MsgID.GLOBAL_POSITION` has a handler callback in `BackyardFlyer`.    
    7. To understand what messages are sent when, look at the logs for: 
       1. `UpAndDownFlyer` in _guided_ mode.  
-      2. Manual drone flying of the `BackyardFlyer` trajectory!  
+      2. Manual drone flying of the `BackyardFlyer` trajectory! _Where are the logs from manual flights? Are they overwritten?_    
 4. Load up on [MAVLink](https://mavlink.io/en/), including the [pymavlink](https://mavlink.io/en/mavgen_python/) ([library](https://pypi.org/project/pymavlink/)).  
    1. The abstract class [`Connection`](https://github.com/udacity/udacidrone/blob/master/udacidrone/connection/connection.py) has protocol-specific subclasses. The class is declared _abstract_ as follows:
       ```python
@@ -80,6 +80,7 @@ Udacity FCND Project 1
          # force use of mavlink v2.0
          os.environ['MAVLINK20'] = '1'
          ```
+   5. Link from mentor on [Communicating with Raspberry Pi via MAVLink](https://ardupilot.org/dev/docs/raspberry-pi-via-mavlink.html).
 5. Coordinate systems:
    1. Figuring out _global_ vs _local_ coordinates.  
       1. Check out [frame_utils](https://github.com/udacity/udacidrone/blob/master/udacidrone/frame_utils.py).  
@@ -89,7 +90,7 @@ Udacity FCND Project 1
 6. State diagram, including:  
    1. Automatic state changes (sequential).  
    2. Callback state changes due to received messages.    
-7. Extras:  
+7. ~Extras:~  
    1. Two modes of flying in a square:  
       1. F-L-B-R.  
       2. F-LT-F-LT-F-LT-F-LT. Note that `Drone.cmd_position()` includes _heading_ as the last parameter. Heading is in _radians_.      

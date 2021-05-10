@@ -37,18 +37,25 @@ class BackyardFlyer(Drone):
 
     def local_position_callback(self):
         """
-        TODO: Implement this method
+        TODO: Implement waypoints (3m height, 10m square side)
 
         This triggers when `MsgID.LOCAL_POSITION` is received and self.local_position contains new data
         """
         if self.flight_state == States.TAKEOFF:
 
             # convert from local NED to global
-            # Note: NED points down
+            # Note: NED vetical component points down
             altitude = -1.0 * self.local_position[2]
 
+            # if altitude > 0.95 * self.target_position[2]:
+            #     self.landing_transition()
+
             if altitude > 0.95 * self.target_position[2]:
-                self.landing_transition()
+                self.waypoint_transition()
+
+        elif self.flight_state == States.WAYPOINT:
+            pass
+            # What messages are called during flight around square?
 
 
     def velocity_callback(self):
@@ -80,7 +87,9 @@ class BackyardFlyer(Drone):
     def calculate_box(self):
         """TODO: Fill out this method
         
-        1. Return waypoints to fly a box
+        1. Get height and side.
+        2. Return waypoints to fly a box
+        3. Call in constructor to set self.all_waypoints
         """
         pass
 
@@ -116,7 +125,7 @@ class BackyardFlyer(Drone):
     def waypoint_transition(self):
         """TODO: Fill out this method
     
-        1. Command the next waypoint position
+        1. Command the next waypoint position w/ cmd_position
         2. Transition to WAYPOINT state
         """
         print("waypoint transition")
