@@ -49,8 +49,16 @@ Udacity FCND Project 1
       2. `MsgID.LOCAL_STATE`.  
    6. Of these, all but `MsgID.GLOBAL_POSITION` has a handler callback in `BackyardFlyer`.    
    7. To understand what messages are sent when, look at the logs for: 
-      1. `UpAndDownFlyer` in _guided_ mode.  
-      2. Manual drone flying of the `BackyardFlyer` trajectory! _Where are the logs from manual flights? Are they overwritten?_    
+      1. `UpAndDownFlyer` in _guided_ mode. The telemetry log (`Logs/TLog.txt`) contains:
+         | Msg | Count | Zero time |
+         | --- | --- | --- |
+         | LOCAL_VELOCITY | 66 | 33 |
+         | GLOBAL_POSITION | 33 | 33 |
+         | LOCAL_POSITION | 33 | 0 |
+         | STATE | 8 | 8 |
+         | GLOBAL_HOME | 8 | 8 |
+
+      2. Manual drone flying of the `BackyardFlyer` trajectory! **Not logged :(**      
 4. Load up on [MAVLink](https://mavlink.io/en/), including the [pymavlink](https://mavlink.io/en/mavgen_python/) ([library](https://pypi.org/project/pymavlink/)).  
    1. The abstract class [`Connection`](https://github.com/udacity/udacidrone/blob/master/udacidrone/connection/connection.py) has protocol-specific subclasses. The class is declared _abstract_ as follows:
       ```python
