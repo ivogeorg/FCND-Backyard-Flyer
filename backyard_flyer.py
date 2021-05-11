@@ -32,73 +32,43 @@ class BackyardFlyer(Drone):
         # initial state
         self.flight_state = States.MANUAL
 
-        # TODO: Register all your callbacks here
+        # Register all callbacks here
         self.register_callback(MsgID.LOCAL_POSITION, self.local_position_callback)
         self.register_callback(MsgID.LOCAL_VELOCITY, self.velocity_callback)
         self.register_callback(MsgID.STATE, self.state_callback)
 
-    def waypoint_reached(self, index):
-        return (abs(self.local_position[0]-self.all_waypoints[index][0]) < 0.05 and
-                abs(self.local_position[1]-self.all_waypoints[index][1]) < 0.05 and
-                abs(self.local_position[2]-self.all_waypoints[index][2]) < 0.05)
+    def waypoint_reached(self, index, error=0.085):
+        """
+        Helper method for calculating if a waypoint is reached.
+        error - controls the region around the point that is accepted;
+                lower error defines a smaller circle and it takes drone
+                longer to hit it, slowing down the trajectory traversal
+        """
+        return (abs(self.local_position[0]-self.all_waypoints[index][0]) < error and
+                abs(self.local_position[1]-self.all_waypoints[index][1]) < error and
+                abs(self.local_position[2]-self.all_waypoints[index][2]) < error)
     
 
     def local_position_callback(self):
         """
-        TODO: Implement waypoints (3m height, 10m square side)
-
         This triggers when `MsgID.LOCAL_POSITION` is received and self.local_position contains new data
         """
-        # TODO (BackyardFlyer):
-        # if state is TAKEOFF:
-        #     If takeoff argument altitude reached:
-        #         call waypoint_transition
-        # elif state is WAYPOINT:
-        #     If all_waypoints[0] waypoint reached:
-        #         remove first element of all_waypoints
-        #         if more waypoints:
-        #             command to all_waypoints[0]
-        #         else
-        #             call landing_transition
         if self.flight_state == States.TAKEOFF:
-
             current_altitude = -1.0 * self.local_position[2]
             if abs(current_altitude - self.altitude) < 0.05:
                 self.waypoint_transition()
-
         elif self.flight_state == States.WAYPOINT:
-
             if self.waypoint_reached(0):  # the next is always first since reached are deleted
-
-                self.all_waypoints.pop(0)
-
+                self.all_waypoints.pop(0)  # remove the reached waypoint
                 if len(self.all_waypoints) > 0:
-
                     self.cmd_position(self.all_waypoints[0][0],
                                       self.all_waypoints[0][1],
-                                      -self.all_waypoints[0][2],
+                                      -1.0 * self.all_waypoints[0][2],
                                       0.0)  # TODO: extra w/ yaw=-pi/2
 
                 else:
                     
                     self.landing_transition()
-
-        # if self.flight_state == States.TAKEOFF:
-
-        #     # convert from local NED to global
-        #     # Note: NED vetical component points down
-        #     altitude = -1.0 * self.local_position[2]
-
-        #     if altitude > 0.95 * self.target_position[2]:
-        #         self.landing_transition()
-
-        #     # TODO: target is 0,0,0, so change test to wpt[0]
-        #     # if altitude > 0.95 * self.target_position[2]:
-        #     #     self.waypoint_transition()
-
-        # # elif self.flight_state == States.WAYPOINT:
-        # #     pass
-        #     # What messages are called during flight around square?
 
 
     def velocity_callback(self):
@@ -128,8 +98,7 @@ class BackyardFlyer(Drone):
                 self.manual_transition()
 
     def calculate_box(self):
-        """TODO: Fill out this method
-        
+        """
         1. Call from waypoint_transition.
         2. Use current local position as origin.
         3. Use self.side to compute box.
@@ -138,7 +107,7 @@ class BackyardFlyer(Drone):
         """
         n0 = self.local_position[0]
         e0 = self.local_position[1]
-        d0 = self.local_position[2]
+        d0 = self.local_position[2]  # down value, so flip for altitude
         self.all_waypoints = [(n0 + self.side, e0, d0),
                               (n0 + self.side, e0 + self.side, d0),
                               (n0, e0 + self.side, d0),
@@ -177,14 +146,14 @@ class BackyardFlyer(Drone):
         """
         1. Calculate box relative to local position.
         2. Command the next waypoint position w/ cmd_position
-        3. cmd_position is in NED
+        3. cmd_position is in NED, but the 3rd parameter is altitude!!!
         4. Transition to WAYPOINT state
         """
         print("waypoint transition")
         self.calculate_box()
         self.cmd_position(self.all_waypoints[0][0],
                           self.all_waypoints[0][1],
-                          -self.all_waypoints[0][2],
+                          -1.0 * self.all_waypoints[0][2],
                           0.0)  # TODO: extra w/ yaw=-pi/2
         self.flight_state = States.WAYPOINT
 
