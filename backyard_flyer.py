@@ -20,9 +20,11 @@ class States(Enum):
 
 class BackyardFlyer(Drone):
 
-    def __init__(self, connection):
+    def __init__(self, connection, altitude, side):
         super().__init__(connection)
         self.target_position = np.array([0.0, 0.0, 0.0])
+        self.altitude = altitude
+        self.side = side
         self.all_waypoints = []
         self.in_mission = True
         self.check_state = {}
@@ -35,27 +37,68 @@ class BackyardFlyer(Drone):
         self.register_callback(MsgID.LOCAL_VELOCITY, self.velocity_callback)
         self.register_callback(MsgID.STATE, self.state_callback)
 
+    def waypoint_reached(self, index):
+        return (abs(self.local_position[0]-self.all_waypoints[index][0]) < 0.05 and
+                abs(self.local_position[1]-self.all_waypoints[index][1]) < 0.05 and
+                abs(self.local_position[2]-self.all_waypoints[index][2]) < 0.05)
+    
+
     def local_position_callback(self):
         """
         TODO: Implement waypoints (3m height, 10m square side)
 
         This triggers when `MsgID.LOCAL_POSITION` is received and self.local_position contains new data
         """
+        # TODO (BackyardFlyer):
+        # if state is TAKEOFF:
+        #     If takeoff argument altitude reached:
+        #         call waypoint_transition
+        # elif state is WAYPOINT:
+        #     If all_waypoints[0] waypoint reached:
+        #         remove first element of all_waypoints
+        #         if more waypoints:
+        #             command to all_waypoints[0]
+        #         else
+        #             call landing_transition
         if self.flight_state == States.TAKEOFF:
 
-            # convert from local NED to global
-            # Note: NED vetical component points down
-            altitude = -1.0 * self.local_position[2]
-
-            # if altitude > 0.95 * self.target_position[2]:
-            #     self.landing_transition()
-
-            if altitude > 0.95 * self.target_position[2]:
+            current_altitude = -1.0 * self.local_position[2]
+            if abs(current_altitude - self.altitude) < 0.05:
                 self.waypoint_transition()
 
         elif self.flight_state == States.WAYPOINT:
-            pass
-            # What messages are called during flight around square?
+
+            if self.waypoint_reached(0):  # the next is always first since reached are deleted
+
+                self.all_waypoints.pop(0)
+
+                if len(self.all_waypoints) > 0:
+
+                    self.cmd_position(self.all_waypoints[0][0],
+                                      self.all_waypoints[0][1],
+                                      -self.all_waypoints[0][2],
+                                      0.0)  # TODO: extra w/ yaw=-pi/2
+
+                else:
+                    
+                    self.landing_transition()
+
+        # if self.flight_state == States.TAKEOFF:
+
+        #     # convert from local NED to global
+        #     # Note: NED vetical component points down
+        #     altitude = -1.0 * self.local_position[2]
+
+        #     if altitude > 0.95 * self.target_position[2]:
+        #         self.landing_transition()
+
+        #     # TODO: target is 0,0,0, so change test to wpt[0]
+        #     # if altitude > 0.95 * self.target_position[2]:
+        #     #     self.waypoint_transition()
+
+        # # elif self.flight_state == States.WAYPOINT:
+        # #     pass
+        #     # What messages are called during flight around square?
 
 
     def velocity_callback(self):
@@ -64,7 +107,7 @@ class BackyardFlyer(Drone):
         """
         if self.flight_state == States.LANDING:
             if ((self.global_position[2] - self.global_home[2] < 0.1) and
-            abs(self.local_position[2]) < 0.01):
+                abs(self.local_position[2]) < 0.01):
                 self.disarming_transition()
 
 
@@ -87,11 +130,19 @@ class BackyardFlyer(Drone):
     def calculate_box(self):
         """TODO: Fill out this method
         
-        1. Get height and side.
-        2. Return waypoints to fly a box
-        3. Call in constructor to set self.all_waypoints
+        1. Call from waypoint_transition.
+        2. Use current local position as origin.
+        3. Use self.side to compute box.
+        4. 4 points, last one is origin.
+        5. Set self.all_waypoints.
         """
-        pass
+        n0 = self.local_position[0]
+        e0 = self.local_position[1]
+        d0 = self.local_position[2]
+        self.all_waypoints = [(n0 + self.side, e0, d0),
+                              (n0 + self.side, e0 + self.side, d0),
+                              (n0, e0 + self.side, d0),
+                              (n0, e0, d0)]
 
     def arming_transition(self):
         """
@@ -117,18 +168,25 @@ class BackyardFlyer(Drone):
         3. Transition to the TAKEOFF state
         """
         print("takeoff transition")
-        target_altitude = 3.0
+        target_altitude = self.altitude
         self.target_position[2] = target_altitude
         self.takeoff(target_altitude)
         self.flight_state = States.TAKEOFF
 
     def waypoint_transition(self):
-        """TODO: Fill out this method
-    
-        1. Command the next waypoint position w/ cmd_position
-        2. Transition to WAYPOINT state
+        """
+        1. Calculate box relative to local position.
+        2. Command the next waypoint position w/ cmd_position
+        3. cmd_position is in NED
+        4. Transition to WAYPOINT state
         """
         print("waypoint transition")
+        self.calculate_box()
+        self.cmd_position(self.all_waypoints[0][0],
+                          self.all_waypoints[0][1],
+                          -self.all_waypoints[0][2],
+                          0.0)  # TODO: extra w/ yaw=-pi/2
+        self.flight_state = States.WAYPOINT
 
     def landing_transition(self):
         """
@@ -182,10 +240,12 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--port', type=int, default=5760, help='Port number')
     parser.add_argument('--host', type=str, default='127.0.0.1', help="host address, i.e. '127.0.0.1'")
+    parser.add_argument('--altitude', type=int, default=3, help='Altitude of trajectory')
+    parser.add_argument('--side', type=int, default=10, help='Side of square trajectory')
     args = parser.parse_args()
 
     conn = MavlinkConnection('tcp:{0}:{1}'.format(args.host, args.port), threaded=False, PX4=False)
     #conn = WebSocketConnection('ws://{0}:{1}'.format(args.host, args.port))
-    drone = BackyardFlyer(conn)
+    drone = BackyardFlyer(conn, args.altitude, args.side)
     time.sleep(2)
     drone.start()

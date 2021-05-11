@@ -59,7 +59,20 @@ Udacity FCND Project 1
          | GLOBAL_HOME | 8 | 8 | 
 
       2. `Msg.STATE` contains {time, armed, guided, generic status}.  
-      3. Manual drone flying of the `BackyardFlyer` trajectory! **No log :(**      
+      3. **Observation:** The local position changes when the drone is armed and set to guided. This means the box has to be calculated afterwards. The easiest is when the target altitude is reached.  
+      4. **Observation:** The main telemetry pattern is as follows:
+         ```
+         MsgID.STATE,0.0000000,False,False,1
+         MsgID.GLOBAL_HOME,0.0000000,-122.3957516,37.7932818,0.0000000
+         MsgID.GLOBAL_POSITION,0.0000000,-122.3957536,37.7932826,0.1270000
+         MsgID.LOCAL_VELOCITY,0.0000000,0.0000000,0.0000000,0.0000000
+         MsgID.LOCAL_POSITION,7.0930000,0.0924919,-0.1722945,-0.1276808
+         MsgID.LOCAL_VELOCITY,7.0930000,0.0000000,0.0000000,-0.0000000
+         ```
+      5. **Observation:** The last 4 lines (`MsgID.GLOBAL_POSITION,MsgID.LOCAL_VELOCITY,MsgID.LOCAL_POSITION,MsgID.LOCAL_VELOCITY`) repeat several times.
+      6. **Observation:** The pattern (`MsgID.GLOBAL_POSITION,MsgID.LOCAL_VELOCITY`) have zero times.
+      7. **Observation:** `GLOBAL_HOME` is set to zero after arming and setting to guided.  
+      8. Manual drone flying of the `BackyardFlyer` trajectory! **No log :(**      
 4. Load up on [MAVLink](https://mavlink.io/en/), including the [pymavlink](https://mavlink.io/en/mavgen_python/) ([library](https://pypi.org/project/pymavlink/)).  
    1. The abstract class [`Connection`](https://github.com/udacity/udacidrone/blob/master/udacidrone/connection/connection.py) has protocol-specific subclasses. The class is declared _abstract_ as follows:
       ```python
